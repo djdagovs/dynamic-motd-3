@@ -3,7 +3,7 @@
 #	 
 #	The boring stuff first - License
 #
-#	(c) 2015-2016 David Gressel http://dckg.net
+#	(c) 2015-2017 David Gressel <dckgdotnet@gmail.com> http://dckg.net
 #
 #	This program is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@ status_cpu_load_warn15m=0.5 # (float) 15minute load average over this value -> r
 status_mem_usage_warn=80.0 # (float) %used memory(-buffers/cache) to trigger red line
 status_swap_usage_warn=80.0 # (float) %used swap to trigger red line
 status_disk_usage_warn=80 # (int) warn if % disk usage greater than this value
+status_file_descriptor_usage_warn=70.0 # (float) warn if % of available file descriptors is used
 update_repository_max_age=86400 # (int) Update Package List (apt-get update) if this period (seconds) after last update has passed 
 # if there is more than one security update, line is red
 # ############################## ~~~~~~~ ############################## 
@@ -107,6 +108,12 @@ processes=$(ps ax | wc -l | awk '{print $1}')
 processes_zombie=$(( $(ps aux | grep 'Z' | wc -l) -2 ))
 
 cpu_load=$(cat /proc/loadavg | awk '{printf "%s %s %s ('$(nproc)' core)", $1, $2, $3}')
+
+file_descriptor_allocated=$(cat /proc/sys/fs/file-nr | awk '{print $1}')
+file_descriptor_max=$(cat /proc/sys/fs/file-nr | awk '{print $3}')
+file_descriptor_tcp=$(netstat -nat | wc -l)
+file_descriptor_usage=$(echo $(bc -l <<< "($file_descriptor_allocated/$file_descriptor_max)*100") | awk '{printf("%3.2f",$1)}')
+
 disk_usage=$(df --total  | grep -v udev | egrep "/dev/*" | awk '{printf "%-20s %-27s %-3s\n", $1, $6, $5}') # -x tmpfs # exclude
 # `df --total -x tmpfs | grep -v udev | egrep "/dev/*"` | grep -v -i /dev/shm | awk '{print substr($5,1,2)}'
 
@@ -155,6 +162,12 @@ else
 	status_swap_usage=$green
 fi
 
+if (( $(bc <<< "$file_descriptor_usage>$status_file_descriptor_usage_warn") ))
+then
+	status_file_descriptor_usage=$red
+else
+	status_file_descriptor_usage=$green
+fi
 
 echo -e -n "$red"
 
@@ -167,7 +180,8 @@ $cyan# System Load $color_no_status_indicator_yet
 Uptime:\t\t$uptime
 Users:\t\t$users$status_cpu_load 
 CPU Load:\t$cpu_load$status_processes_zombie 
-Processes:\t$processes ($processes_zombie zombies)$status_mem_usage 
+Processes:\t$processes ($processes_zombie zombies)$status_file_descriptor_usage
+FDs:\t\t$file_descriptor_usage% ($file_descriptor_allocated [TCP: $file_descriptor_tcp] / $file_descriptor_max)$status_mem_usage 
 Memory Usage:\t$mem_usage%$status_swap_usage 
 Swap Usage:\t$swap_usage%$color_no_status_indicator_yet 
 $cyan# Disk - Device      Mountpoint			 %Usage $color_no_status_indicator_yet "
