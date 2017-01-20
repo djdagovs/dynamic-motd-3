@@ -3,7 +3,7 @@
 #	 
 #	The boring stuff first - License
 #
-#	(c) 2015-2017 David Gressel <dckgdotnet@gmail.com> http://dckg.net
+#	(c) 2015-2016 David Gressel http://dckg.net
 #
 #	This program is free software: you can redistribute it and/or modify
 #	it under the terms of the GNU General Public License as published by
@@ -242,10 +242,20 @@ if [ $EUID -eq 0 ]; then
 		updates_security=$(apt-get -s upgrade | grep ^Inst | grep -i security | wc -l)
 		
 		package_manager_found=1
+	elif [ -f /usr/bin/pacman ]; then
+		updates=$(pacman -Syup | grep "http://" | wc -l) 2>/dev/null
+
+		if [ -f /usr/bin/arch-audit ]; then
+			updates_security=$(arch-audit --upgradable | wc -l) 2>/dev/null
+		else
+			echo -e "${red}Error: Please install arch-audit from AUR$defcolor";
+		fi
+		package_manager_found=1
 	else
-		echo -e "$red Error: No command available yet for your package manager/OS$defcolor";
+		echo -e "${red}Error: No command available yet for your package manager$defcolor";
 	fi
-	
+
+
 	if (("$package_manager_found" == "1")); then
 		
 		updates_security=$(($updates_security+0))
