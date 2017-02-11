@@ -18,15 +18,6 @@
 #	You should have received a copy of the GNU General Public License
 #	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# ############################## SETUP ############################## 
-#	apt-get update && apt-get install figlet lsb-release bc
-#	# Copy this file to /usr/local/bin/dynmotd
-#	wget -O /usr/local/bin/dynmotd http://dckg.net/dl/blog/linux/dynamic-motd.sh;
-#	rm /etc/motd # delete original motd
-#	chmod +x /usr/local/bin/dynmotd
-#	# Add to /etc/profile
-#	echo /usr/local/bin/dynmotd >> /etc/profile
-# ############################## ~~~~~ ############################## 
 #
 # ############################## SETTINGS ############################## 
 # User defined warnings (row in red)
