@@ -215,7 +215,9 @@ echo "$interfaces" | while read iface; do
 	rx=$(cat /sys/class/net/$iface/statistics/rx_bytes)
 	tx=$(cat /sys/class/net/$iface/statistics/tx_bytes)
 # 	echo -e "$iface\t\t\t $(($rx/1024/1024)) MiB\t\t\t$(($tx/1024/1024)) MiB";
-	printf "%-13s %17s %19s\n" "$iface" "$(bc -l <<< "scale=1; $rx/1024/1024/1024") GiB" "$(bc -l <<< "scale=1; $tx/1024/1024/1024") GiB"
+	if (( $(($rx+$tx)) > 0 )); then
+		printf "%-13s %17s %19s\n" "$iface" "$(bc -l <<< "scale=1; $rx/1024/1024/1024") GiB" "$(bc -l <<< "scale=1; $tx/1024/1024/1024") GiB"
+	fi;
 done
 
 echo -e "$cyan# Security$color_no_status_indicator_yet"
